@@ -1,0 +1,14 @@
+# Environnement virtuel Python et fichiers compilés
+.venv/
+__pycache__/
+*.pyc
+
+# Dossier de travail de Vagrant (état local des VM)
+.vagrant/
+
+# Secrets et configuration locale : ne JAMAIS les publier
+.env
+
+# Journaux et sauvegardes générés par les scripts
+*.log
+backups/

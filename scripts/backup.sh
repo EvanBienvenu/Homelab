@@ -2,7 +2,7 @@
 # backup.sh : sauvegarde horodatée d'un dossier, avec vérification et rotation
 # Usage : sudo ./scripts/backup.sh [dossier_source] [nombre_a_garder]
 set -euo pipefail
-
+umask 077   # sauvegardes lisibles par root uniquement (elles contiennent des secrets)
 SOURCE="${1:-/etc}"
 A_GARDER="${2:-7}"
 DESTINATION="/var/backups/homelab"

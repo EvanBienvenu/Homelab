@@ -6,18 +6,16 @@ app = FastAPI(title="Inventaire Homelab", version="0.1.0")
 
 
 class EquipementIn(BaseModel):
-    """Ce que le client envoie pour créer un équipement."""
     nom: str
-    categorie: str                 # ex. : serveur, switch, poste
-    adresse_ip: str | None = None  # facultatif
+    categorie: str
+    adresse_ip: str | None = None
 
 
 class Equipement(EquipementIn):
-    """Ce que l'API renvoie : les mêmes champs, plus un identifiant."""
     id: int
 
 
-# Stockage en mémoire pour la v1 : tout est perdu au redémarrage
+# stockage en mémoire pour l'instant, perdu au redémarrage
 equipements: dict[int, Equipement] = {}
 prochain_id = 1
 

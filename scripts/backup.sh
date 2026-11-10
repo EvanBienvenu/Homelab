@@ -1,8 +1,7 @@
 #!/usr/bin/env bash
-# backup.sh : sauvegarde horodatée d'un dossier, avec vérification et rotation
-# Usage : sudo ./scripts/backup.sh [dossier_source] [nombre_a_garder]
+# usage : sudo ./scripts/backup.sh [dossier_source] [nombre_a_garder]
 set -euo pipefail
-umask 077   # sauvegardes lisibles par root uniquement (elles contiennent des secrets)
+umask 077
 SOURCE="${1:-/etc}"
 A_GARDER="${2:-7}"
 DESTINATION="/var/backups/homelab"
@@ -10,7 +9,6 @@ PREFIXE="$(basename "$SOURCE")"
 
 log() { echo "$(date '+%F %T') [$1] $2"; }
 
-# Contrôles avant de commencer
 if [[ $EUID -ne 0 ]]; then
   log ERREUR "lance ce script avec sudo"
   exit 1
@@ -20,13 +18,11 @@ if [[ ! -d "$SOURCE" ]]; then
   exit 1
 fi
 
-# 1. Création de l'archive datée
 mkdir -p "$DESTINATION"
 ARCHIVE="$DESTINATION/${PREFIXE}-$(date '+%Y%m%d-%H%M%S').tar.gz"
 log INFO "sauvegarde de $SOURCE vers $ARCHIVE"
 tar -czf "$ARCHIVE" -C "$(dirname "$SOURCE")" "$PREFIXE"
 
-# 2. Vérification : une sauvegarde illisible ne sert à rien
 if tar -tzf "$ARCHIVE" >/dev/null; then
   log OK "archive vérifiée ($(du -h "$ARCHIVE" | cut -f1))"
 else
@@ -34,11 +30,10 @@ else
   exit 1
 fi
 
-# 3. Empreinte SHA-256 pour contrôler l'intégrité plus tard
 sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
 log OK "empreinte SHA-256 enregistrée"
 
-# 4. Rotation : on ne garde que les A_GARDER archives les plus récentes
+# rotation : garde les $A_GARDER plus récentes
 mapfile -t ANCIENNES < <(
   find "$DESTINATION" -maxdepth 1 -name "${PREFIXE}-*.tar.gz" -printf '%T@ %p\n' \
     | sort -rn | tail -n +"$((A_GARDER + 1))" | cut -d' ' -f2-

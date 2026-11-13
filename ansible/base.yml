@@ -14,6 +14,7 @@
           - git
           - htop
           - python3-venv
+          - python3-packaging
         state: present
 
     - name: Créer l'utilisateur deploy

@@ -1,0 +1,58 @@
+---
+- name: Déployer l'API d'inventaire
+  hosts: app
+  vars:
+    app_name: inventaire
+    app_user: deploy
+    app_dir: /opt/inventaire
+    app_port: 8000
+
+  tasks:
+    - name: Créer le dossier de l'application
+      ansible.builtin.file:
+        path: "{{ app_dir }}"
+        state: directory
+        owner: root
+        group: root
+        mode: "0755"
+
+    - name: Copier le code et les dépendances
+      ansible.builtin.copy:
+        src: "{{ playbook_dir }}/../app/{{ item }}"
+        dest: "{{ app_dir }}/{{ item }}"
+        owner: root
+        group: root
+        mode: "0644"
+      loop:
+        - main.py
+        - requirements.txt
+      notify: Redémarrer l'API
+
+    - name: Installer les dépendances Python dans un venv
+      ansible.builtin.pip:
+        requirements: "{{ app_dir }}/requirements.txt"
+        virtualenv: "{{ app_dir }}/.venv"
+        virtualenv_command: python3 -m venv
+      notify: Redémarrer l'API
+
+    - name: Installer le service systemd
+      ansible.builtin.template:
+        src: inventaire.service.j2
+        dest: "/etc/systemd/system/{{ app_name }}.service"
+        owner: root
+        group: root
+        mode: "0644"
+      notify: Redémarrer l'API
+
+    - name: Activer et démarrer le service
+      ansible.builtin.systemd_service:
+        name: "{{ app_name }}"
+        enabled: true
+        state: started
+
+  handlers:
+    - name: Redémarrer l'API
+      ansible.builtin.systemd_service:
+        name: "{{ app_name }}"
+        state: restarted
+        daemon_reload: true

@@ -1,0 +1,24 @@
+---
+- name: Configuration de base des serveurs app
+  hosts: app
+  tasks:
+    - name: Mettre à jour le cache apt
+      ansible.builtin.apt:
+        update_cache: true
+        cache_valid_time: 3600
+
+    - name: Installer les paquets de base
+      ansible.builtin.apt:
+        name:
+          - curl
+          - git
+          - htop
+          - python3-venv
+        state: present
+
+    - name: Créer l'utilisateur deploy
+      ansible.builtin.user:
+        name: deploy
+        shell: /bin/bash
+        create_home: true
+        state: present
